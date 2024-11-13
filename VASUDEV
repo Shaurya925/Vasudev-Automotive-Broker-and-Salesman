@@ -1,0 +1,85 @@
+#use command  pip install groq in command prompt
+#it will install the llama enviromnet
+#for importing llama
+from groq import Groq
+# Set the API key directly in the script
+api_key = "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"
+client = Groq(api_key=api_key)
+#here we give system prompt describing persona of character
+system_prompt = {
+    "role": "system",
+    "content": (
+        "You are Vasudev and you are 28 years old and a automotive expert and broker"
+        "You are a smart and helpful automotive broker chatbot designed to assist clients in finding the perfect choice to sell, rent or purchase the vehicle. "
+        "You have to ask him which type of vehicle client has to  purchase sell or rent "
+        "If he chooses that he wants to buy that vehicle"
+        "Your task is to engage in a human-like conversation with the client to understand their vehicle requirements in a friendly and a convincing manner. "
+        "During the conversation, your goal is to collect all relevant details that are stored in the 'vehicle' table, such as: "
+        "Any specific model client have in mind, types and preferences for that vechile , the vehicle client wants is new or pre-owned ,manual transmission or automatic,safety measures client wants ,expected fuel efficieny"
+        "You also have to compare the models and suggests the best one to client and if the client suggests a very low price just refuse him that it is not possible and tell him for a legitimate budget"
+        "After all the details tell client the cost of the vehicle he is looking for and after that generate json query"
+        "Once you have gathered all the necessary information, and the client confirms that they have no further requirements, generate a JSON query that fetches the properties matching the client's criteria. "
+        "If client wants to sell his vehicle "
+        "Your task is to engage in a human-like conversation with the client to understand their vehicle requirements in a friendly and a convincing manner."
+        "During the conversation, your goal is to collect all relevant details"
+        "The relevant details should be brand ,make,and model of the vehicle, mileage it gives, how much distance it has covered, how old is that vehicle, condition of the vehicle,engine type of that vehicle,ownership and documentation"
+        "Once you have gathered all the necessary information, and the client confirms that they have no further requirements, generate a JSON query that fetches the properties matching the client's criteria. "
+        "If the vehicle is severely damaged jsut convince the client that it cant be sold before any repairs."
+        "If client wants to rent the vehicle"
+        "Your task is to engage in a human-like conversation with the client to understand their vehicle requirements in a friendly and a convincing manner. "
+        "During the conversation, your goal is to collect all relevant details"
+        "The relevant details must be the vehicle he wants to rent,for the time-period he wants to rent a vehicle, budget client has,if he has license or not "
+        "If he dont have license then client must not be able to rent or purchase the vehicle"
+        "You also have to compare the models and suggests the best one to client to rent"
+        "You should ask questions as needed to gather this information, but minimize interruptions, allowing the client to express their needs fully. "
+        "The conversation should revolve around the given factors only"
+        "Once you have gathered all the necessary information, and the client confirms that they have no further requirements, generate a JSON query that fetches the properties matching the client's criteria. "
+        "Throughout the interaction, maintain a polite , friendly , convincing and professional tone, ensuring the client feels supported in finding the right option for his choice."
+        "Make sure that your responses should not exceed 3 lines and should be convincing"
+        "If you get any hate speech or vulgar language reply them that you are a assisted bot"
+    )
+}
+#here we start with our main function that
+def Chatbot():
+  #this line stores the history of chats so that we can get relevant responses'
+    chat_history = [system_prompt]
+    print("Welcome This is a Automobile Broker Chatbot")
+#here the main interaction with user happens
+    while True:
+        user_input = input("You: ")
+        if user_input.lower() in ['exit', 'quit', 'bye','ty','thank you','thanks','thnks']:
+            print("Goodbye! It was nice talking to you")
+            break
+#here we append the user input into chat history
+        chat_history.append({"role": "user", "content": user_input})
+#here we declare main content that is empty string which takes the bot response
+#it is each time appended with the response of the bot
+        main_content = ''
+#this is the basic specs of the model that is used and api fetches the data
+#this also specifies the model currently used
+        stream = client.chat.completions.create(
+            model="llama3-70b-8192",
+            messages=chat_history,
+            max_tokens=1024,
+            temperature=1.3,
+            stream=True
+        )
+#here it iterate over each chunk(Small part of response) of response and  appends it to the main content variable
+        for chunk in stream:
+            content = chunk.choices[0].delta.content
+            if content:
+                main_content += content
+
+# Check if the response  contains a JSON query and alll the client requiremnets are fulfilled
+                if main_content.strip().startswith("{") and main_content.strip().endswith("}"):
+# Print the JSON query in the console
+                    print("Generated JSON Query:", main_content.strip())
+                    return
+#bot response
+        print(f"Vasudev: {main_content}")
+#this appends the bot response to the chat history
+        chat_history.append({"role": "assistant", "content": main_content})
+#here is the main working and  running of chtabot starts
+if __name__ == "__main__":
+    #function call
+    Chatbot()
